@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Schedule - Interactive Calendar</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .hour-row { height: 60px; }
+    </style>
+</head>
+<body class="bg-white text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header / Calendar Navigation -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-20 shadow-sm flex-wrap gap-2">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 text-gray-700 font-medium text-xl">
+                <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                </svg>
+                <span class="text-gray-700 font-semibold text-lg">Resource Schedule</span>
+            </div>
+            <h2 class="text-lg font-medium text-gray-600 border-l pl-4 border-gray-300">October 2026</h2>
+        </div>
+
+        <!-- Search & Quick Direct Link Info -->
+        <div class="flex items-center space-x-3">
+            <input type="text" id="search-input" placeholder="Search ID or Space..." class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 w-48">
+            <button onclick="resetFilters()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg border border-gray-300 transition">
+                Reset Filters
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Controls -->
+        <aside class="w-64 border-r border-gray-200 p-4 bg-gray-50 flex flex-col justify-between overflow-y-auto hidden md:flex">
+            <div class="space-y-5">
+                <!-- Filter Space -->
+                <div>
+                    <h3 class="font-bold text-xs text-gray-500 uppercase tracking-wider mb-2">Filter Space</h3>
+                    <select id="space-filter" class="w-full border border-gray-300 rounded p-1.5 text-xs bg-white text-gray-700 focus:outline-none">
+                        <option value="ALL">All Spaces</option>
+                    </select>
+                </div>
+
+                <!-- Filter Seats -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-xs text-gray-500 uppercase tracking-wider">Filter Seats</h3>
+                        <button onclick="toggleAllSeats(true)" class="text-[10px] text-blue-600 hover:underline">Select All</button>
+                    </div>
+                    <div class="space-y-1.5 text-xs" id="seat-filters">
+                        <!-- Dynamic Checkboxes -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 text-[11px] text-blue-800 space-y-1 mt-4">
+                <p class="font-bold">🔗 Share Link Feature:</p>
+                <p class="opacity-90">Append <code class="bg-white px-1 rounded border border-blue-200">?seat=1</code> or <code class="bg-white px-1 rounded border border-blue-200">?id=ID_NUM</code> to the URL to send a filtered view.</p>
+            </div>
+        </aside>
+
+        <!-- Main Calendar Area -->
+        <main class="flex-1 flex flex-col overflow-auto bg-white relative">
+            
+            <!-- Days Header Columns -->
+            <div class="grid grid-cols-8 border-b border-gray-200 bg-white sticky top-0 z-10 text-xs font-medium text-gray-500 text-center">
+                <div class="p-3 border-r border-gray-100 bg-gray-50">GMT+0</div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">THU</span><span class="text-base font-normal text-gray-800">1</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">SAT</span><span class="text-base font-normal text-gray-800">3</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">SUN</span><span class="text-base font-normal text-gray-800">4</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">MON</span><span class="text-base font-normal text-gray-800">5</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">TUE</span><span class="text-base font-normal text-gray-800">6</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">WED</span><span class="text-base font-normal text-gray-800">7</span></div>
+                <div class="p-2 border-r border-gray-100"><span class="text-gray-400 block text-[10px]">THU</span><span class="text-base font-normal text-gray-800">8</span></div>
+            </div>
+
+            <!-- Time Grid (08:00 to 21:00) -->
+            <div class="grid grid-cols-8 flex-1 min-h-[780px] relative">
+                
+                <!-- Hours Sidebar -->
+                <div class="border-r border-gray-100 text-[11px] text-gray-400 text-right pr-2 select-none bg-gray-50/50">
+                    <div class="hour-row border-b border-gray-100 pt-1">08:00 AM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">09:00 AM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">10:00 AM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">11:00 AM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">12:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">01:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">02:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">03:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">04:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">05:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">06:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">07:00 PM</div>
+                    <div class="hour-row border-b border-gray-100 pt-1">08:00 PM</div>
+                </div>
+
+                <!-- 7 Day Columns -->
+                <script>
+                    const days = [1, 3, 4, 5, 6, 7, 8];
+                    days.forEach(day => {
+                        document.write(`
+                            <div id="day-col-${day}" class="border-r border-gray-100 relative h-full">
+                                ${'<div class="hour-row border-b border-gray-100"></div>'.repeat(13)}
+                            </div>
+                        `);
+                    });
+                </script>
+            </div>
+        </main>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-xl p-5 w-80 shadow-2xl relative border border-gray-100">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-sm">✕</button>
+            <div class="flex items-center space-x-2 mb-3">
+                <span id="modal-color" class="w-3.5 h-3.5 rounded-full"></span>
+                <h3 class="text-sm font-bold text-gray-800" id="modal-title">Booking Details</h3>
+            </div>
+            <div class="space-y-2 text-xs text-gray-600 border-t pt-3" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // Full Dataset Parsed from Table (Accepted Status Only)
+        const rawBookings = [
+            { id: '405919481', space: 'TAQAT Space', seat: 1, time: '09:00-16:00', startHour: 9, endHour: 16, activeDays: [4, 5, 6, 7], color: 'bg-blue-600 border-blue-700' },
+            { id: '408404820', space: 'Al-Salam Space', seat: 4, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-rose-600 border-rose-700' },
+            { id: '409474467', space: 'Nano Space', seat: 1, time: '16:00-20:00', startHour: 16, endHour: 20, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-purple-600 border-purple-700' },
+            { id: '407873769', space: 'Pal-Life Space', seat: 1, time: '10:00-17:00', startHour: 10, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-indigo-600 border-indigo-700' },
+            { id: '402434534', space: 'Amro Space', seat: 5, time: '11:00-14:00', startHour: 11, endHour: 14, activeDays: [3, 4, 5, 6, 7], color: 'bg-emerald-600 border-emerald-700' },
+            { id: '400838942', space: 'Al-Salam Space', seat: 1, time: '09:00-12:00', startHour: 9, endHour: 12, activeDays: [4, 6, 8], color: 'bg-blue-600 border-blue-700' },
+            { id: '407885359', space: 'Amro Space', seat: 1, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [3, 5, 7], color: 'bg-teal-600 border-teal-700' },
+            { id: '409876265', space: 'Pal-Life Space', seat: 4, time: '14:00-17:00', startHour: 14, endHour: 17, activeDays: [3, 8], color: 'bg-amber-600 border-amber-700' },
+            { id: '408037661', space: 'TAQAT Space', seat: 1, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [3, 8], color: 'bg-orange-600 border-orange-700' },
+            { id: '407976984', space: 'Al-Salam Space', seat: 6, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-cyan-600 border-cyan-700' },
+            { id: '407941442', space: 'Atyaf Space', seat: 5, time: '12:00-17:00', startHour: 12, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-pink-600 border-pink-700' },
+            { id: '407921923', space: 'Al-Salam Space', seat: 3, time: '10:00-17:00', startHour: 10, endHour: 17, activeDays: [4, 6, 8], color: 'bg-orange-600 border-orange-700' },
+            { id: '404020828', space: 'Al-Salam Space', seat: 7, time: '09:00-16:00', startHour: 9, endHour: 16, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-pink-600 border-pink-700' },
+            { id: '403692411', space: 'Pal-Life Space', seat: 3, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-violet-600 border-violet-700' },
+            { id: '406087742', space: 'Pal-Life Space', seat: 5, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-fuchsia-600 border-fuchsia-700' },
+            { id: '120231285', space: 'FIVE Space', seat: 1, time: '09:00-21:00', startHour: 9, endHour: 21, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-sky-600 border-sky-700' },
+            { id: '411151855', space: 'Al-Salam Space', seat: 2, time: '13:00-16:00', startHour: 13, endHour: 16, activeDays: [1, 5, 7], color: 'bg-teal-600 border-teal-700' },
+            { id: '403739758', space: 'Al-Salam Space', seat: 5, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [3, 4, 5, 6, 7, 8], color: 'bg-purple-600 border-purple-700' },
+            { id: '409491750', space: 'Al-Salam Space', seat: 1, time: '10:00-16:00', startHour: 10, endHour: 16, activeDays: [1, 5, 7], color: 'bg-indigo-600 border-indigo-700' },
+            { id: '407135748', space: 'Al-Salam Space', seat: 3, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [5, 8], color: 'bg-amber-600 border-amber-700' },
+            { id: '408471282', space: 'Al-Salam Space', seat: 2, time: '10:00-12:00', startHour: 10, endHour: 12, activeDays: [4, 6, 8], color: 'bg-emerald-600 border-emerald-700' },
+            { id: '406134627', space: 'Amro Space', seat: 2, time: '13:00-18:00', startHour: 13, endHour: 18, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-green-600 border-green-700' },
+            { id: '404119745', space: 'Amro Space', seat: 3, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-lime-600 border-lime-700' },
+            { id: '407073543', space: 'Amro Space', seat: 4, time: '09:00-16:00', startHour: 9, endHour: 16, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-emerald-700 border-emerald-800' },
+            { id: '407109065', space: 'Amro Space', seat: 1, time: '10:00-17:00', startHour: 10, endHour: 17, activeDays: [4, 6, 8], color: 'bg-blue-700 border-blue-800' },
+            { id: '408007270', space: 'Amro Space', seat: 5, time: '09:00-13:00', startHour: 9, endHour: 13, activeDays: [4, 6, 8], color: 'bg-teal-700 border-teal-800' },
+            { id: '407683648', space: 'Atyaf Space', seat: 1, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-rose-700 border-rose-800' },
+            { id: '409048931', space: 'Atyaf Space', seat: 2, time: '10:00-14:00', startHour: 10, endHour: 14, activeDays: [1, 5, 7], color: 'bg-pink-700 border-pink-800' },
+            { id: '405154642', space: 'Atyaf Space', seat: 3, time: '09:00-14:00', startHour: 9, endHour: 14, activeDays: [5, 6, 7, 8], color: 'bg-red-600 border-red-700' },
+            { id: '931698211', space: 'Atyaf Space', seat: 4, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [1, 4, 5, 6, 7, 8], color: 'bg-orange-700 border-orange-800' },
+            { id: '407917962', space: 'Concept Space', seat: 2, time: '10:00-15:00', startHour: 10, endHour: 15, activeDays: [4, 6, 7, 8], color: 'bg-amber-700 border-amber-800' },
+            { id: '420478539', space: 'Concept Space', seat: 1, time: '10:00-12:00', startHour: 10, endHour: 12, activeDays: [1, 5, 7], color: 'bg-blue-800 border-blue-900' },
+            { id: '401819073', space: 'Concept Space', seat: 1, time: '10:00-16:00', startHour: 10, endHour: 16, activeDays: [4, 6, 8], color: 'bg-indigo-800 border-indigo-900' },
+            { id: '422521369', space: 'Concept Space', seat: 3, time: '09:00-15:00', startHour: 9, endHour: 15, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-cyan-700 border-cyan-800' },
+            { id: '421293952', space: 'Concept Space', seat: 4, time: '09:00-15:00', startHour: 9, endHour: 15, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-teal-800 border-teal-900' },
+            { id: '421385089', space: 'Diamond Space', seat: 1, time: '15:00-17:00', startHour: 15, endHour: 17, activeDays: [5, 8], color: 'bg-slate-600 border-slate-700' },
+            { id: '409383718', space: 'FIVE Space', seat: 2, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-sky-700 border-sky-800' },
+            { id: '802361394', space: 'Nano Space', seat: 2, time: '09:00-18:00', startHour: 9, endHour: 18, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-purple-700 border-purple-800' },
+            { id: '407728153', space: 'Pal-Life Space', seat: 2, time: '10:00-17:00', startHour: 10, endHour: 17, activeDays: [4, 5, 6, 7, 8], color: 'bg-fuchsia-700 border-fuchsia-800' },
+            { id: '409377256', space: 'Taiff Spaces', seat: 1, time: '09:00-17:00', startHour: 9, endHour: 17, activeDays: [1, 3, 4, 5, 6, 7, 8], color: 'bg-stone-600 border-stone-700' }
+        ];
+
+        // Populate Sidebar Selectors
+        const spaceSelect = document.getElementById('space-filter');
+        const seatFiltersContainer = document.getElementById('seat-filters');
+        
+        const uniqueSpaces = [...new Set(rawBookings.map(b => b.space))].sort();
+        uniqueSpaces.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            spaceSelect.appendChild(opt);
+        });
+
+        const uniqueSeats = [...new Set(rawBookings.map(b => b.seat))].sort((a,b)=>a-b);
+        uniqueSeats.forEach(seat => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center space-x-2 cursor-pointer hover:bg-gray-200/60 p-1 rounded transition';
+            label.innerHTML = `
+                <input type="checkbox" checked value="${seat}" class="seat-checkbox rounded text-blue-600 w-3.5 h-3.5">
+                <span class="font-medium text-gray-700 text-xs">Seat ${seat}</span>
+            `;
+            seatFiltersContainer.appendChild(label);
+        });
+
+        // URL Parameters Handler (Automatic Filters on Link Click)
+        function applyUrlParameters() {
+            const params = new URLSearchParams(window.location.search);
+            const seatParam = params.get('seat');
+            const spaceParam = params.get('space');
+            const idParam = params.get('id');
+
+            if (seatParam) {
+                const targetSeat = parseInt(seatParam);
+                document.querySelectorAll('.seat-checkbox').forEach(cb => {
+                    cb.checked = (parseInt(cb.value) === targetSeat);
+                });
+            }
+
+            if (spaceParam) {
+                spaceSelect.value = spaceParam;
+            }
+
+            if (idParam) {
+                document.getElementById('search-input').value = idParam;
+            }
+        }
+
+        // Render Engine
+        function renderEvents() {
+            const daysList = [1, 3, 4, 5, 6, 7, 8];
+            const selectedSeats = Array.from(document.querySelectorAll('.seat-checkbox:checked')).map(cb => parseInt(cb.value));
+            const selectedSpace = spaceSelect.value;
+            const searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+
+            // Clear Day Columns
+            daysList.forEach(day => {
+                const col = document.getElementById(`day-col-${day}`);
+                col.querySelectorAll('.event-card').forEach(e => e.remove());
+            });
+
+            // Filter Dataset
+            const activeBookings = rawBookings.filter(b => {
+                const matchSeat = selectedSeats.includes(b.seat);
+                const matchSpace = (selectedSpace === 'ALL' || b.space === selectedSpace);
+                const matchSearch = (!searchQuery || b.id.toLowerCase().includes(searchQuery) || b.space.toLowerCase().includes(searchQuery));
+                return matchSeat && matchSpace && matchSearch;
+            });
+
+            daysList.forEach(day => {
+                const col = document.getElementById(`day-col-${day}`);
+                const dayBookings = activeBookings.filter(b => b.activeDays.includes(day));
+
+                dayBookings.forEach((b) => {
+                    const hourHeight = 60; // 60px per hour
+                    const topPos = (b.startHour - 8) * hourHeight;
+                    const durationHeight = (b.endHour - b.startHour) * hourHeight;
+
+                    const card = document.createElement('div');
+                    card.className = `event-card absolute ${b.color} text-white rounded p-1.5 shadow-sm text-xs cursor-pointer hover:brightness-105 transition border border-white/20 overflow-hidden flex flex-col justify-between w-[calc(100%-4px)] left-[2px] z-10`;
+                    
+                    card.style.top = `${topPos + 1}px`;
+                    card.style.height = `${durationHeight - 2}px`;
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="font-bold text-[10px] leading-tight truncate">Seat ${b.seat} • ID ${b.id}</div>
+                            <div class="text-[9px] opacity-90 truncate">${b.space}</div>
+                            <div class="text-[9px] opacity-80">${b.time}</div>
+                        </div>
+                    `;
+
+                    card.onclick = () => showModal(b);
+                    col.appendChild(card);
+                });
+            });
+        }
+
+        function toggleAllSeats(checked) {
+            document.querySelectorAll('.seat-checkbox').forEach(cb => cb.checked = checked);
+            renderEvents();
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            spaceSelect.value = 'ALL';
+            toggleAllSeats(true);
+            window.history.pushState({}, document.title, window.location.pathname);
+        }
+
+        function showModal(b) {
+            document.getElementById('modal-color').className = `w-3.5 h-3.5 rounded-full ${b.color}`;
+            document.getElementById('modal-title').innerText = `ID ${b.id} - Details`;
+            document.getElementById('modal-body').innerHTML = `
+                <div class="flex justify-between"><strong>Space:</strong> <span>${b.space}</span></div>
+                <div class="flex justify-between"><strong>Seat:</strong> <span>Seat ${b.seat}</span></div>
+                <div class="flex justify-between"><strong>Time Slot:</strong> <span>${b.time}</span></div>
+                <div class="flex justify-between"><strong>Status:</strong> <span class="text-green-600 font-bold">Accepted</span></div>
+            `;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.seat-checkbox').forEach(cb => cb.addEventListener('change', renderEvents));
+        spaceSelect.addEventListener('change', renderEvents);
+        document.getElementById('search-input').addEventListener('input', renderEvents);
+
+        // Initial Setup
+        applyUrlParameters();
+        renderEvents();
+    </script>
+</body>
+</html>
